@@ -5,7 +5,7 @@
 Nowadays, there are some framework trying to make nodejs code more structured and easily scalable, Some of them are AdonisJs and NestJs. The second one is parlicularly interesting because of their good documentation available at <a href="nestjs.io">Nestjs.io</a> and the growing community behind this framework. It also have a good integration with <a href="delightful.typeorm.io">TypeORM </a> which support several database like MySQL, PostgreSQL and even MongoDB database.Finally we gonna use VueJS for our frontend side of the project because we can make things ready very quickly with Vue.
 <br><b>N.B:</b> This tutorial assumes you already have some basic understanding of these three technology , we also gonna deal with passport authentication with the Jwt strategy, before move forward let's see what we gonna build at then end of this tutorial series.
 
-<img src='../chat_app_Server.gif' width='100%' height="650px">
+<img src='./chat_app_Server.gif' width='100%' height="650px">
 
 ## Features
 
