@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="./scripts/vue.js"></script>
+    <script type="text/javascript" src="./scripts/socket.io.js"></script>
+    <title>Opensource REST API | apimocket</title>
+</head>
+
+<link rel="stylesheet" href="./styles.css">
+<style>
+    textarea,
+    input {
+        padding: 0px;
+        margin: 0px;
+    }
+
+    .wrapper {
+        padding: 5%;
+    }
+
+    .user-list {
+        width: 45%;
+        float: left;
+        height: 500px;
+    }
+
+    .chat-box {
+        width: 45%;
+        float: right;
+        height: 500px;
+    }
+
+    .chat-detail {
+        width: 100%;
+        height: 450px;
+        overflow: auto;
+        background-color: aqua;
+    }
+
+    .message-box {
+        height: 40px;
+        width: 100%;
+    }
+
+    .message-box textarea {
+        height: 100%;
+        width: 84%;
+        border-right: none;
+
+    }
+
+    .message-box .send-btn {
+        float: right;
+        width: 15%;
+        height: 100%;
+        text-align: center;
+        color: white;
+        background-color: #000;
+        text-decoration: none;
+
+    }
+
+    .chat-detail li .message {
+        padding: 10px;
+        margin-top: 5px;
+        width: 80%;
+        border: 1px solid black;
+        display: block;
+    }
+
+    .chat-detail li .message.right {
+        float: right;
+        background-color: #afe
+    }
+
+    .chat-detail li .message.left {
+        float: left;
+        background-color: pink;
+    }
+
+    .user-item .indicator {
+        width: 10px;
+        display: inline-block;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .user-item .indicator.offline {
+
+        background-color: red;
+    }
+
+    .user-item .online {
+        background-color: green;
+    }
+</style>
+
+<body>
+
+    <div id='v-app'>
+        <div id="loader-container" v-if="loading">
+            <div class="loader"></div>
+        </div>
+        <div v-else class="wrapper">
+            <div class="user-list">
+                <ul v-if="users">
+                    <li v-for="u of users"><a class="user-item" style="cursor: pointer;color:blue"
+                            @click.prevent="chatWith(u)">
+                            <span class="indicator" :class="isOnline(u.id)?'online':'offline'"></span>
+                            {{u.email}}
+                            <span v-if="getUnreadCount(u.id)!==0">(unread message)</span>
+                        </a></li>
+
+                </ul>
+                <div style="margin-top: 10px;">
+                    <button @click='logout()'>Logout</button>
+                </div>
+            </div>
+            <div class="chat-box">
+                <div class="chat-detail">
+                    <ul v-if="activeChat">
+                        <li v-for="m in getMessages" :key="m.id">
+                            <div class="message" :class="m.senderId===activeChat.id?'left':'right'">
+                                {{m.content}}</div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="message-box">
+                    <textarea v-model="message_content"></textarea>
+                    <button @click.prevent="sendMessage()" class="send-btn">send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var app = new Vue({
+            el: '#v-app',
+            data: {
+                users: null,
+                userData: null,
+                loading: false,
+                activeChat: null,
+                activeChatMessages: null,
+                title: 'Opensource REST API | apimocket',
+                messages: [],
+                unreadMessages: [],
+                message_content: '',
+                socket: null,
+                onlineUsers: [],
+
+            },
+            computed: {
+                getMessages() {
+                    if (this.activeChat) {
+                        if (!this.messages[this.activeChat.id]) return [];
+                        return this.messages[this.activeChat.id];
+                    }
+                    return [];
+                }
+
+            },
+            methods: {
+                isOnline(id) {
+                    return this.onlineUsers.indexOf(id) !== -1;
+                },
+                updateOnlineUsers(usersId) {
+                    console.log(usersId);
+                    this.$forceUpdate();
+                    this.onlineUsers = usersId;
+                },
+                logout() {
+                    localStorage.removeItem('userData');
+                    location.href = './index.html';
+                },
+                getLet(id) {
+                    if (!this.messages[id]) return 0;
+
+                    return this.messages[id].length;
+                },
+                getUnreadCount(id) {
+                    if (!this.unreadMessages[id]) {
+                        this.unreadMessages[id] = [];
+                        return 0;
+                    }
+                    return this.unreadMessages[id].length;
+                },
+                chatWith(u) {
+                    this.activeChat = u;
+                    this.unreadMessages[u.id] = [];
+                    this.loadConversationsWith(u);
+                },
+                sendMessage() {
+                    //this.loading = true;
+                    fetch('http://localhost:3000/api/chat/' + this.activeChat.id + '/sendMessage', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + this.userData.accessToken
+                            },
+                            body: JSON.stringify({
+                                message: this.message_content
+                            })
+                        })
+                        .then((resp) => {
+                            this.loading = false;
+                            console.log(resp);
+                            if (resp.status === 201) {
+                                resp.json().then(data => {
+                                    this.messages[this.activeChat.id].push(data);
+                                    this.message_content = '';
+                                    this.$forceUpdate();
+                                    this.scrollToBottom();
+                                });
+                            } else {
+                                alert('An error occured');
+                            }
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                            this.loading = false;
+                        })
+                },
+                scrollToBottom() {
+                    setTimeout(() => {
+                        document.getElementsByClassName('chat-detail')[0].scrollTop = document
+                            .getElementsByClassName('chat-detail')[0].scrollHeight
+                    }, 100);
+
+                },
+                receiveMessage(msg) {
+                    if (!this.messages[msg.senderId]) this.messages[msg.senderId] = [];
+                    this.messages[msg.senderId].push(msg);
+                    if (!this.activeChat || (this.activeChat && msg.senderId !== this.activeChat.id)) {
+                        this.unreadMessages[msg.senderId] ? this.unreadMessages[msg.senderId]++ : (this
+                            .unreadMessages[msg.senderId] = 1);
+                    }
+                    this.$forceUpdate();
+                    this.scrollToBottom();
+
+                },
+                loadMyConversations() {
+                    fetch('http://localhost:3000/api/chat/messages', {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + this.userData.accessToken
+                            }
+                        })
+                        .then((resp) => {
+                            console.log(resp.status)
+                            this.loading = false;
+                            if (resp.status === 200 || resp.status === 304) {
+                                resp.json().then(data => {
+                                    for (let u of this.users) {
+                                        let cou = 0;
+                                        let local = [];
+                                        for (let m of data) {
+
+                                            if (!this.messages[m.senderId]) this.messages[m
+                                                .senderId] = [];
+                                            if (u.id === m.senderId || u.id === m.receiverId) {
+                                                local.push(m);
+                                            }
+                                        }
+                                        console.log(u.username, local);
+                                        this.messages[u.id] = local;
+                                        local = [];
+                                    }
+                                    this.$forceUpdate();
+                                });
+                            } else {
+                                alert('vous devez vous reconnecter ')
+                                location.href = './index.html';
+
+                            }
+
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                            this.loading = false;
+                        })
+
+                },
+                loadConversationsWith(u) {
+                    this.loading = true;
+                    fetch('http://localhost:3000/api/chat/' + u.id + '/messages', {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + this.userData.accessToken
+                            }
+                        })
+                        .then((resp) => {
+
+                            if (resp.status === 401) {
+                                alert('vous devez vous reconnecter ');
+                                location.href = './index.html';
+                            }
+
+                            resp.json().then(data => {
+                                if (!this.messages[u.id]) this.messages[u.id] = [];
+                                this.messages[u.id] = Array.from(data);
+                                this.conversations = Array.from(data);
+                                console.log('with', u.username);
+                                this.loading = false;
+                                this.scrollToBottom();
+                            });
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                            this.loading = false;
+                        })
+                },
+                loadUsers() {
+                    fetch('http://localhost:3000/api/users', {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + this.userData.accessToken
+                            }
+                        })
+                        .then((resp) => {
+                            this.loading = false;
+                            resp.json().then(data => {
+                                this.users = data;
+                                this.loadMyConversations();
+                            });
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                            this.loading = false;
+                        })
+                }
+            },
+            mounted() {
+                console.log('component mounted')
+                this.userData = JSON.parse(localStorage.getItem('userData'));
+                this.socket = io('http://localhost:3000/chat', {
+                    transports: ['websocket'],
+                    query: {
+                        token: this.userData.accessToken
+                    }
+                });
+                this.loadUsers();
+                this.socket.on('message', (msg) => {
+                    this.receiveMessage(msg)
+                })
+
+                this.socket.on('users/online', (usersId) => {
+                    this.updateOnlineUsers(usersId);
+                })
+
+
+
+                this.socket.on('newMessage/user/' + this.userData.data.userId, (msg) => {
+                    this.receiveMessage(msg)
+                })
+
+            }
+        });
+    </script>
+</body>
+
+</html>

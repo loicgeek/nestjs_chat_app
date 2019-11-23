@@ -1,0 +1,62 @@
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+ul {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+    ;
+}
+
+#login,
+#signup {
+    position: fixed;
+    margin-left: 30%;
+    padding: 20px;
+    width: 30%;
+    top: calc(100%/4);
+    border-radius: 5px;
+    text-align: center;
+    border: 1px solid black;
+}
+
+#login input,
+#signup input {
+    padding: 10px;
+    width: 90%;
+    border-radius: 5px;
+    height: 30px;
+    margin-top: 10px;
+    border: 1px solid black;
+}
+
+.submit {
+    margin-top: 10px;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    border: none;
+    width: 150px;
+}
+
+#loader-container {
+    z-index: 5;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    filter: opacity(.2);
+}
+
+.loader {
+    width: 30px;
+    height: 30px;
+    position: fixed;
+    border: 5px solid blue;
+    filter: opacity(1.0);
+    border-radius: 50%;
+    top: calc(50%);
+    left: calc(50%);
+}
