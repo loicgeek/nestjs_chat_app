@@ -14,6 +14,9 @@ export class User {
   email: string;
 
   @Column()
+  country: string;
+
+  @Column()
   @Exclude()
   password: string;
 

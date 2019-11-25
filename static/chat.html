@@ -22,11 +22,8 @@
         padding: 5%;
     }
 
-    .user-list {
-        width: 45%;
-        float: left;
-        height: 500px;
-    }
+
+
 
     .chat-box {
         width: 45%;
@@ -34,11 +31,19 @@
         height: 500px;
     }
 
+    .chat-box h3 {
+        padding: 10px;
+        border-top-right-radius: 5px;
+        background-color: #481818;
+        color: #fff;
+        border-top-left-radius: 5px;
+    }
+
     .chat-detail {
         width: 100%;
         height: 450px;
         overflow: auto;
-        background-color: aqua;
+        background: linear-gradient(70deg, #11bbbb, transparent);
     }
 
     .message-box {
@@ -70,23 +75,44 @@
         width: 80%;
         border: 1px solid black;
         display: block;
+        font-family: cursive;
     }
 
     .chat-detail li .message.right {
         float: right;
+        margin-right: 1px;
         background-color: #afe
     }
 
     .chat-detail li .message.left {
+        margin-left: 1px;
         float: left;
         background-color: pink;
     }
 
+    .user-list {
+        width: 45%;
+        float: left;
+        border: 1px solid black;
+    }
+
+    .user-list .user-item {
+        display: block;
+        cursor: pointer;
+        color: blue;
+        padding: 10px;
+        border: 1px solid black;
+    }
+
     .user-item .indicator {
         width: 10px;
-        display: inline-block;
         height: 10px;
+        float: right;
         border-radius: 50%;
+    }
+
+    .user-item .country {
+        padding: 5px;
     }
 
     .user-item .indicator.offline {
@@ -94,33 +120,119 @@
         background-color: red;
     }
 
+    .unread-signal {
+        color: grey;
+    }
+
     .user-item .online {
         background-color: green;
+    }
+
+    .logout-btn button {
+        border: none;
+        padding: 10px;
+        position: absolute;
+        background-color: red;
+        color: #fff;
+        bottom: 15px;
+        cursor: pointer;
+    }
+
+    #back-btn {
+        display: none;
+    }
+
+    @media screen and (max-width: 500px) {
+        .wrapper {
+            padding: 0;
+            ;
+        }
+
+        .user-list {
+            width: 100%;
+        }
+
+        .user-list.hide {
+            display: none;
+        }
+
+        .chat-box.hide {
+            display: none;
+        }
+
+        .user-list.show {
+            display: block;
+        }
+
+        .chat-box.show {
+            display: block;
+        }
+
+        .chat-box {
+            width: 100%;
+        }
+
+        #back-btn {
+            display: block;
+            float: right;
+        }
+
+        .message-box {
+            position: absolute;
+            bottom: 0px;
+        }
+
+        .chat-detail {
+            height: calc(97%);
+        }
+    }
+
+    @media screen and (min-width: 800px) {
+        .wrapper {
+            padding-left: 10%;
+            padding-right: 10%;
+        }
+    }
+
+    @media screen and (min-width: 1000px) {
+        .wrapper {
+            padding-left: 20%;
+            padding-right: 20%;
+        }
+    }
+
+    @media screen and (min-width: 1300px) {
+        .wrapper {
+            padding-left: 25%;
+            padding-right: 25%;
+        }
     }
 </style>
 
 <body>
-
     <div id='v-app'>
         <div id="loader-container" v-if="loading">
             <div class="loader"></div>
         </div>
         <div v-else class="wrapper">
-            <div class="user-list">
+            <div class="user-list" :class="!chat_open?'show':'hide'">
+                <input style="width: 90%; border-right: none;padding: 5px;" type="text" v-model="query"
+                    placeholder="search users here">
                 <ul v-if="users">
-                    <li v-for="u of users"><a class="user-item" style="cursor: pointer;color:blue"
-                            @click.prevent="chatWith(u)">
-                            <span class="indicator" :class="isOnline(u.id)?'online':'offline'"></span>
+                    <li v-for="u of filterUsers()"><a class="user-item" @click.prevent="chatWith(u)">
+                            <span class="country">({{u.country}})</span>
                             {{u.email}}
-                            <span v-if="getUnreadCount(u.id)!==0">(unread message)</span>
+                            <span class="unread-signal" v-if="getUnreadCount(u.id)!==0">(unread message)</span>
+                            <span class="indicator" :class="isOnline(u.id)?'online':'offline'"></span>
                         </a></li>
-
                 </ul>
-                <div style="margin-top: 10px;">
+                <div class="logout-btn">
                     <button @click='logout()'>Logout</button>
                 </div>
             </div>
-            <div class="chat-box">
+            <div class="chat-box" :class="chat_open?'show':'hide'">
+                <h3 v-if="activeChat">Chat with : {{activeChat.username}} <span id='back-btn'
+                        @click='chat_open=!chat_open;activeChat=null;'>back</span></h3>
                 <div class="chat-detail">
                     <ul v-if="activeChat">
                         <li v-for="m in getMessages" :key="m.id">
@@ -140,7 +252,9 @@
         var app = new Vue({
             el: '#v-app',
             data: {
-                users: null,
+                chat_open: false,
+                query: '',
+                users: [],
                 userData: null,
                 loading: false,
                 activeChat: null,
@@ -153,6 +267,11 @@
                 onlineUsers: [],
 
             },
+            watch: {
+                query: (newVal, oldVal) => {
+                    // this.filterUsers(newVal);
+                }
+            },
             computed: {
                 getMessages() {
                     if (this.activeChat) {
@@ -164,6 +283,14 @@
 
             },
             methods: {
+                filterUsers() {
+
+                    if (!this.query || this.query.trim() === '') {
+                        return this.users;
+                    }
+                    return this.users.filter(u => u.username.includes(this.query) || u.country.includes(this
+                        .query));
+                },
                 isOnline(id) {
                     return this.onlineUsers.indexOf(id) !== -1;
                 },
@@ -189,12 +316,23 @@
                     return this.unreadMessages[id].length;
                 },
                 chatWith(u) {
+                    this.chat_open = !this.chat_open
+                    if (this.activeChat === u) return;
+
                     this.activeChat = u;
                     this.unreadMessages[u.id] = [];
                     this.loadConversationsWith(u);
                 },
                 sendMessage() {
-                    //this.loading = true;
+                    if (!this.activeChat) {
+                        alert('selet user first');
+                        return;
+                    }
+
+                    if (this.message_content.trim() === '') {
+                        alert('message could not be empty');
+                        return;
+                    }
                     fetch('http://localhost:3000/api/chat/' + this.activeChat.id + '/sendMessage', {
                             method: 'POST',
                             headers: {
@@ -226,9 +364,10 @@
                 },
                 scrollToBottom() {
                     setTimeout(() => {
+
                         document.getElementsByClassName('chat-detail')[0].scrollTop = document
                             .getElementsByClassName('chat-detail')[0].scrollHeight
-                    }, 100);
+                    }, 10);
 
                 },
                 receiveMessage(msg) {

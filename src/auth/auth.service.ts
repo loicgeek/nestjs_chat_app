@@ -18,18 +18,18 @@ export class AuthService {
   ) {}
 
   async signup(createUserDTO: CreateUserDTO) {
-    const { username, email, password } = createUserDTO;
+    const { username, email, password, country } = createUserDTO;
 
     const exist = await this.userService.findUserbyEmail(email);
     if (exist) {
       throw new BadRequestException('email already taken');
     }
-    const salt: string = await bcriptjs.genSalt();
     const user = new User();
     user.email = email;
-    user.password = await this.hashPassword(password, salt);
     user.username = username;
-    user.salt = salt;
+    user.country = country;
+    user.salt = await bcriptjs.genSalt();
+    user.password = await this.hashPassword(password, user.salt);
     await this.userService.saveUser(user);
     return user;
   }
@@ -47,6 +47,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       userId: user.id,
+      country: user.country,
     };
     const accessToken = await this.jwtService.sign(payload);
     const decode = this.jwtService.decode(accessToken);

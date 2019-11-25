@@ -1,12 +1,14 @@
-body {
+body,
+ul,
+h3,
+h2,
+h1 {
     margin: 0px;
     padding: 0px;
 }
 
 ul {
     list-style: none;
-    margin: 0px;
-    padding: 0px;
     ;
 }
 
