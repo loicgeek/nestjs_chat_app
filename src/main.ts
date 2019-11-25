@@ -9,9 +9,9 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(__dirname, '..', 'static'));
   app.setGlobalPrefix('api');
-  const port = 3000;
+  const port = process.env.PORT || 3000;
   await app.listen(port).then(() => {
-    logger.log(`server listenning on port ${port}`);
+    logger.log('listenning on port :' + port);
   });
 }
 bootstrap();

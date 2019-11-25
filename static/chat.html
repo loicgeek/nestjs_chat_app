@@ -265,7 +265,7 @@
                 message_content: '',
                 socket: null,
                 onlineUsers: [],
-
+                url: 'https://chat-app-237.herokuapp.com'
             },
             watch: {
                 query: (newVal, oldVal) => {
@@ -333,7 +333,7 @@
                         alert('message could not be empty');
                         return;
                     }
-                    fetch('http://localhost:3000/api/chat/' + this.activeChat.id + '/sendMessage', {
+                    fetch(this.url + '/api/chat/' + this.activeChat.id + '/sendMessage', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -382,7 +382,7 @@
 
                 },
                 loadMyConversations() {
-                    fetch('http://localhost:3000/api/chat/messages', {
+                    fetch(this.url + '/api/chat/messages', {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -426,7 +426,7 @@
                 },
                 loadConversationsWith(u) {
                     this.loading = true;
-                    fetch('http://localhost:3000/api/chat/' + u.id + '/messages', {
+                    fetch(this.url + '/api/chat/' + u.id + '/messages', {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -455,7 +455,7 @@
                         })
                 },
                 loadUsers() {
-                    fetch('http://localhost:3000/api/users', {
+                    fetch(this.url + '/api/users', {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
