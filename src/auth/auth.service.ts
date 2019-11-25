@@ -9,7 +9,6 @@ import { UserService } from '../user/user.service';
 import * as bcriptjs from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './jwt-payload.interface';
-import { ChatGateway } from '../chat/chat.gateway';
 
 @Injectable()
 export class AuthService {

@@ -19,5 +19,6 @@ import { PassportModule } from '@nestjs/passport';
   ],
   controllers: [ChatController],
   providers: [ConversationService, ChatGateway],
+  exports: [ChatGateway],
 })
 export class ChatModule {}
