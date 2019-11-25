@@ -478,7 +478,7 @@
             mounted() {
                 console.log('component mounted')
                 this.userData = JSON.parse(localStorage.getItem('userData'));
-                this.socket = io('http://localhost:3000/chat', {
+                this.socket = io(this.url + '/chat', {
                     transports: ['websocket'],
                     query: {
                         token: this.userData.accessToken
