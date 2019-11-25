@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
 import { FindOneOptions } from 'typeorm';
+import { ChatGateway } from 'src/chat/chat.gateway';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserRepository)
     private userRepository: UserRepository,
+    private chatGateway: ChatGateway,
   ) {}
 
   async findUserbyEmail(email: string) {
@@ -17,7 +19,9 @@ export class UserService {
   }
 
   async saveUser(user: User) {
-    return await this.userRepository.save(user);
+    const usersaved: User = await this.userRepository.save(user);
+    this.chatGateway.wss.emit('users/new', usersaved);
+    return usersaved;
   }
 
   async findByUsernameOrEmail(username: string): Promise<User> {

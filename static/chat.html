@@ -493,6 +493,11 @@
                     this.updateOnlineUsers(usersId);
                 })
 
+                this.socket.on('users/new', (user) => {
+                    this.users.push(user);
+                    this.$forceUpdate();
+                })
+
 
 
                 this.socket.on('newMessage/user/' + this.userData.data.userId, (msg) => {
