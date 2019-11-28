@@ -32,18 +32,19 @@
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.0",
+    "dotenv": "^8.2.0",
     "mysql": "^2.17.1",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.12",
     "rimraf": "^2.6.2",
     "rxjs": "^6.3.3",
-    "typeorm": "^0.2.20",
     "sqlite3": "^4.0.2",
     "ts-node": "8.1.0",
-    "typescript": "3.4.3",
     "tsconfig-paths": "3.8.0",
-    "tslint": "5.16.0"
+    "tslint": "5.16.0",
+    "typeorm": "^0.2.20",
+    "typescript": "3.4.3"
   },
   "devDependencies": {
     "@nestjs/testing": "^6.0.0",
