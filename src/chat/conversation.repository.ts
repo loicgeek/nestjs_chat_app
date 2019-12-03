@@ -4,6 +4,7 @@ import { CreateConversationDTO } from './dto/create-conversation.dto';
 import { FilterConversation } from './dto/filter-conversation.dto';
 import { User } from '../user/user.entity';
 import { UnauthorizedException } from '@nestjs/common';
+import { MarkAsReadConversationDTO } from './dto/markAsRead.dto';
 
 @EntityRepository(Conversation)
 export class ConversationRepository extends Repository<Conversation> {
@@ -62,16 +63,18 @@ export class ConversationRepository extends Repository<Conversation> {
     return this.save(conversation);
   }
 
-  async markAllBeforeAsRead(conversation: Conversation) {
+  async markAllBeforeAsRead(conversation: MarkAsReadConversationDTO) {
     const q = this.createQueryBuilder('conversations')
       .update({ readAt: new Date().toISOString() })
-      .andWhere('(senderId=:senderId and receiverId=:receiverId)', {
-        senderId: conversation.senderId,
-        receiverId: conversation.receiverId,
-      })
-      .orWhere('(senderId=:receiverId and receiverId=:senderId)', {
-        receiverId: conversation.receiverId,
-        senderId: conversation.senderId,
+      .andWhere(
+        '(senderId=:senderId and receiverId=:receiverId) or (senderId=:receiverId and receiverId=:senderId)',
+        {
+          senderId: conversation.senderId,
+          receiverId: conversation.receiverId,
+        },
+      )
+      .andWhere('createdAt <= :createdAt', {
+        createdAt: new Date(conversation.createdAt).toISOString(),
       })
       .andWhere('readAt IS NULL');
     const result = await q.execute();

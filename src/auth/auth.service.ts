@@ -9,6 +9,7 @@ import { UserService } from '../user/user.service';
 import * as bcriptjs from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './jwt-payload.interface';
+import { AuthUserDTO } from './dto/auth-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -34,16 +35,18 @@ export class AuthService {
     return user;
   }
 
-  async signin(username: string, password: string) {
-    const user: User = await this.userService.findByUsernameOrEmail(username);
+  async signin(authUserDTO: AuthUserDTO) {
+    const user: User = await this.userService.findByUsernameOrEmail(
+      authUserDTO.username,
+    );
     if (!user) {
       throw new UnauthorizedException('user not found');
     }
-    if (!(await user.validatePassword(password))) {
+    if (!(await user.validatePassword(authUserDTO.password))) {
       throw new UnauthorizedException('Authentication Failed');
     }
 
-    const payload: JwtPayload = {
+    const payload = {
       username: user.username,
       email: user.email,
       userId: user.id,

@@ -4,6 +4,7 @@ import { UserRepository } from './user.repository';
 import { User } from './user.entity';
 import { FindOneOptions } from 'typeorm';
 import { ChatGateway } from '../chat/chat.gateway';
+import { FilterUserDTO } from './dto/filter-user.dto';
 
 @Injectable()
 export class UserService {
@@ -32,7 +33,7 @@ export class UserService {
       .getOne();
   }
 
-  async getUsers(): Promise<User[]> {
-    return this.userRepository.find();
+  async getUsers(filter: FilterUserDTO): Promise<User[]> {
+    return this.userRepository.getUsers(filter);
   }
 }

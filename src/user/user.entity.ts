@@ -1,19 +1,24 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import * as bcriptjs from 'bcryptjs';
+import { ApiModelProperty } from '@nestjs/swagger';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
+  @ApiModelProperty()
   id: number;
 
   @Column()
+  @ApiModelProperty()
   username: string;
 
   @Column()
+  @ApiModelProperty()
   email: string;
 
   @Column()
+  @ApiModelProperty()
   country: string;
 
   @Column()
