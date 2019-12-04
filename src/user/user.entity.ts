@@ -17,7 +17,9 @@ export class User {
   @ApiModelProperty()
   email: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   @ApiModelProperty()
   country: string;
 

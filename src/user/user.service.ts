@@ -2,12 +2,30 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
-import { FindOneOptions } from 'typeorm';
 import { ChatGateway } from '../chat/chat.gateway';
 import { FilterUserDTO } from './dto/filter-user.dto';
+import * as bcriptjs from 'bcryptjs';
 
 @Injectable()
 export class UserService {
+  async findOrCreateSocialUser(profile: any) {
+    let user = await this.userRepository.findOne({
+      username: profile.displayName,
+    });
+    if (!user) {
+      const salt = await bcriptjs.genSalt();
+      const password = await bcriptjs.hash(profile.id, salt);
+      user = new User();
+      user.username = profile.displayName;
+      user.salt = salt;
+      user.password = password;
+      if (profile.emails[0]) {
+        user.email = profile.emails[0].value;
+      }
+      this.saveUser(user);
+    }
+    return user;
+  }
   constructor(
     @InjectRepository(UserRepository)
     private userRepository: UserRepository,

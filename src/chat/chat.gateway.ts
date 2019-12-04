@@ -5,10 +5,9 @@ import {
   WebSocketServer,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { UseGuards, Logger } from '@nestjs/common';
-import { WsAuthGuard } from '../auth/ws-auth.guard';
 import { Socket, Client, Server } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({ namespace: 'chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -20,8 +19,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   wss: Server;
 
   constructor(private jwtService: JwtService) {}
-
-  @UseGuards(WsAuthGuard)
   handleConnection(socket: Socket, ...args: any[]) {
     const user = this.getUser(socket);
     if (!user) {

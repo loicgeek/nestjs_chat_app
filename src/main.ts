@@ -14,6 +14,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(__dirname, '..', 'static'));
   app.setGlobalPrefix('v1/api');
+  app.enableCors();
 
   const options = new DocumentBuilder()
     .setTitle('OpenRestApi Documentation')
@@ -27,10 +28,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   const swaggerCustomOprions: SwaggerCustomOptions = {
     customSiteTitle: 'OpenRestApi Documentation',
+    customCss: '../static/uk/css/uikit.min.css',
   };
   SwaggerModule.setup('/docs/v1', app, document, swaggerCustomOprions);
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 4000;
   await app.listen(port).then(() => {
     logger.log('listenning on port :' + port);
   });
