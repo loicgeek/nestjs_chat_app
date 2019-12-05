@@ -7,6 +7,9 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="./scripts/vue.js"></script>
     <script type="text/javascript" src="./scripts/socket.io.js"></script>
+    <link rel="stylesheet" href="./uk/css/uikit.min.css">
+    <script type="text/javascript" src="./uk/js/uikit-icons.min.js"></script>
+    <script type="text/javascript" src="./uk/js/uikit.min.js"></script>
     <title>Opensource REST API | apimocket</title>
 </head>
 
@@ -215,13 +218,14 @@
             <div class="loader"></div>
         </div>
         <div v-else class="wrapper">
-            <div class="user-list" :class="!chat_open?'show':'hide'">
+            <div class="user-list uk-card uk-card-default uk-card-body uk-box-shadow-large"
+                :class="!chat_open?'show':'hide'">
                 <input style="width: 90%; border-right: none;padding: 5px;" type="text" v-model="query"
                     placeholder="search users here">
                 <ul v-if="users">
                     <li v-for="u of filterUsers()"><a class="user-item" @click.prevent="chatWith(u)">
                             <span class="country">({{u.country}})</span>
-                            {{u.email}}
+                            {{u.email || u.username}}
                             <span class="unread-signal" v-if="getUnreadCount(u.id)!==0">(unread message)</span>
                             <span class="indicator" :class="isOnline(u.id)?'online':'offline'"></span>
                         </a></li>
@@ -230,7 +234,7 @@
                     <button @click='logout()'>Logout</button>
                 </div>
             </div>
-            <div class="chat-box" :class="chat_open?'show':'hide'">
+            <div class="chat-box uk-card uk-card-default uk-card-body" :class="chat_open?'show':'hide'">
                 <h3 v-if="activeChat">Chat with : {{activeChat.username}} <span id='back-btn'
                         @click='chat_open=!chat_open;activeChat=null;'>back</span></h3>
                 <div class="chat-detail">
@@ -265,7 +269,6 @@
                 message_content: '',
                 socket: null,
                 onlineUsers: [],
-                url: 'https://chat-app-237.herokuapp.com'
             },
             watch: {
                 query: (newVal, oldVal) => {
@@ -301,7 +304,7 @@
                 },
                 logout() {
                     localStorage.removeItem('userData');
-                    location.href = './index.html';
+                    location.href = './login.html';
                 },
                 getLet(id) {
                     if (!this.messages[id]) return 0;
@@ -333,7 +336,7 @@
                         alert('message could not be empty');
                         return;
                     }
-                    fetch(this.url + '/api/chat/' + this.activeChat.id + '/sendMessage', {
+                    fetch('/v1/api/chat/' + this.activeChat.id + '/sendMessage', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -382,7 +385,7 @@
 
                 },
                 loadMyConversations() {
-                    fetch(this.url + '/api/chat/messages', {
+                    fetch('/v1/api/chat/messages', {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -413,7 +416,7 @@
                                 });
                             } else {
                                 alert('vous devez vous reconnecter ')
-                                location.href = './index.html';
+                                location.href = './login.html';
 
                             }
 
@@ -426,7 +429,7 @@
                 },
                 loadConversationsWith(u) {
                     this.loading = true;
-                    fetch(this.url + '/api/chat/' + u.id + '/messages', {
+                    fetch('/v1/api/chat/' + u.id + '/messages', {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -437,7 +440,7 @@
 
                             if (resp.status === 401) {
                                 alert('vous devez vous reconnecter ');
-                                location.href = './index.html';
+                                location.href = './login.html';
                             }
 
                             resp.json().then(data => {
@@ -455,7 +458,7 @@
                         })
                 },
                 loadUsers() {
-                    fetch(this.url + '/api/users', {
+                    fetch('/v1/api/users', {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -478,7 +481,7 @@
             mounted() {
                 console.log('component mounted')
                 this.userData = JSON.parse(localStorage.getItem('userData'));
-                this.socket = io(this.url + '/chat', {
+                this.socket = io('/chat', {
                     transports: ['websocket'],
                     query: {
                         token: this.userData.accessToken

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
@@ -21,6 +21,8 @@ export class UserService {
       user.password = password;
       if (profile.emails[0]) {
         user.email = profile.emails[0].value;
+      } else {
+        throw new UnprocessableEntityException('User must Provide email');
       }
       this.saveUser(user);
     }
