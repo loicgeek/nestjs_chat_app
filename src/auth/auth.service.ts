@@ -9,6 +9,8 @@ import { UserService } from '../user/user.service';
 import * as bcriptjs from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { AuthUserDTO } from './dto/auth-user.dto';
+import { SignOptions } from 'jsonwebtoken';
+import { jwtConstants } from '../config/jwt.config';
 
 @Injectable()
 export class AuthService {
@@ -44,23 +46,15 @@ export class AuthService {
 
     if (hashed === false) {
       if (!(await user.validatePassword(authUserDTO.password))) {
-        throw new UnauthorizedException('Authentication Failed');
+        throw new UnauthorizedException('Password Mismatch');
       }
     } else {
       if (user.password !== authUserDTO.password) {
-        throw new UnauthorizedException('Authentication Failed');
+        throw new UnauthorizedException('Password Mismatch');
       }
     }
 
-    const payload = {
-      username: user.username,
-      email: user.email,
-      userId: user.id,
-      country: user.country,
-    };
-    const accessToken = await this.jwtService.sign(payload);
-    const decode = this.jwtService.decode(accessToken);
-    return { accessToken, data: decode };
+    return this.generateAuthSuccessResponse(user);
   }
 
   private async hashPassword(password: string, salt: string): Promise<string> {
@@ -69,5 +63,31 @@ export class AuthService {
 
   decodeToken(accessToken: string) {
     return this.jwtService.decode(accessToken);
+  }
+
+  async generateAuthSuccessResponse(user: User, isRefresh: boolean = false) {
+    console.log(`refresh token `, isRefresh);
+    console.log(`authService `, user);
+    const payload = {
+      username: user.username,
+      email: user.email,
+      id: user.id,
+      country: user.country,
+    };
+    const accessToken = await this.jwtService.sign(payload);
+    const refreshToken = await this.jwtService.sign(
+      payload,
+      jwtConstants.rSignOptions,
+    );
+    const decoded = this.jwtService.decode(accessToken);
+    return { accessToken, refreshToken, data: decoded };
+  }
+
+  async refreshToken(accessToken: string) {
+    const user: any = this.jwtService.decode(accessToken);
+    if (!user) {
+      throw new UnauthorizedException('user not found');
+    }
+    return await this.generateAuthSuccessResponse(user, true);
   }
 }

@@ -8,6 +8,7 @@ import {
 import { Socket, Client, Server } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { Logger } from '@nestjs/common';
+import { jwtConstants } from '../config/jwt.config';
 
 @WebSocketGateway({ namespace: 'chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -20,21 +21,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(private jwtService: JwtService) {}
   handleConnection(socket: Socket, ...args: any[]) {
+    this.logger.log(socket.handshake.query);
     const user = this.getUser(socket);
     if (!user) {
       socket.disconnect();
       this.logger.error('authentication failed ' + socket.id);
     } else {
-      this.logger.warn('authentication success! ' + user.username);
-      this.onlineUsers.add(user.userId);
+      this.logger.warn(user);
+      this.logger.warn(
+        'authentication success! ' + user.username + ' - id:' + user.id,
+      );
+      this.onlineUsers.add(user.id);
       this.dispatchUsersOnline();
     }
   }
 
   handleDisconnect(socket: Socket) {
     const user: any = this.getUser(socket);
-    this.onlineUsers.delete(user.userId);
-    this.logger.warn('user disconnected ' + user.username);
+    this.onlineUsers.delete(user.id);
+    this.logger.warn('user disconnected ' + user.username + ' - id:' + user.id);
     this.dispatchUsersOnline();
   }
 

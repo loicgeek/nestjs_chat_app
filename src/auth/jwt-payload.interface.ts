@@ -8,7 +8,7 @@ export class JwtPayload {
   email: string;
 
   @ApiModelProperty()
-  userId: number;
+  id: number;
 
   @ApiModelProperty()
   country: string;

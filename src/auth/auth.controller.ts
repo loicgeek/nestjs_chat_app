@@ -8,6 +8,7 @@ import {
   UseGuards,
   Get,
   Req,
+  Query,
 } from '@nestjs/common';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { AuthService } from './auth.service';
@@ -22,8 +23,9 @@ import {
   ApiImplicitQuery,
 } from '@nestjs/swagger';
 import { AuthUserDTO } from './dto/auth-user.dto';
-import { JwtPayload, JwtPayloadReponse } from './jwt-payload.interface';
+import { JwtPayloadReponse } from './jwt-payload.interface';
 import { AuthGuard } from '@nestjs/passport';
+import { IsNotEmpty } from 'class-validator';
 
 @ApiUseTags('Authentication')
 @Controller('auth')
@@ -54,6 +56,18 @@ export class AuthController {
   @ApiProduces('application/json')
   async signin(@Body(ValidationPipe) authUserDTO: AuthUserDTO) {
     return this.authService.signin(authUserDTO);
+  }
+
+  @Get('/refresh')
+  @ApiUnauthorizedResponse({ description: 'Access Token infalid' })
+  @ApiOkResponse({
+    description: 'access token,refresh token and User Data',
+    type: JwtPayloadReponse,
+  })
+  @ApiProduces('application/json')
+  async refreshToken(@Query('accessToken', NotNullPipe) accessToken: string) {
+    console.log(accessToken);
+    return this.authService.refreshToken(accessToken);
   }
 
   @UseGuards(AuthGuard('facebook-token'))
